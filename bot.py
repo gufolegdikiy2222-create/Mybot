@@ -1,20 +1,31 @@
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, LabeledPrice, PreCheckoutQuery, ContentType
 from aiogram.filters import Command
 
-# ТВОЙ ТОКЕН (уже вставлен)
-TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo"
+# ==========================================
+# 1. НАСТРОЙКИ (УЖЕ ВСТАВЛЕНЫ ЗА ТЕБЯ)
+# ==========================================
+TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo" # Твой токен бота
 
-# Включаем логирование (чтобы видеть ошибки)
+# ВСТАВЬ СЮДА ТОКЕН ОТ ЮKASSA (КОТОРЫЙ ДАСТ BOTFATHER)
+# Он будет выглядеть примерно так: 381764678:TEST:...
+PAYMENTS_TOKEN = "ВСТАВИТЬ_ТОКЕН_ЮKASSA_СЮДА"
+
+# Твой Telegram (уже вставлен)
+AUTHOR_CONTACT = "@erohon"
+
+# ==========================================
+# 2. ЗАПУСК БОТА
+# ==========================================
 logging.basicConfig(level=logging.INFO)
-
-# Создаём бота и диспетчер
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# СТАРТОВОЕ СООБЩЕНИЕ
+# ==========================================
+# 3. ГЛАВНОЕ МЕНЮ (СТАРТ)
+# ==========================================
 @dp.message(Command("start"))
 async def start(message: types.Message):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
@@ -32,69 +43,142 @@ async def start(message: types.Message):
         parse_mode="Markdown"
     )
 
-# КНОПКА "НОЧНОЙ ПРОРЫВ"
+# ==========================================
+# 4. ОПИСАНИЯ ТОВАРОВ И КНОПКИ ОПЛАТЫ
+# ==========================================
 @dp.callback_query(lambda c: c.data == "night")
 async def night(callback: types.CallbackQuery):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="💳 Оплатить 149 ₽", callback_data="pay_night")]
+    ])
     await callback.message.answer(
         "🌙 *Ночной прорыв*\n\n"
-        "Техника засыпания за 5 минут + аудиодорожка.\n\n"
-        "💰 Цена: 149 ₽\n\n"
-        "Оплата пока вручную — напиши мне, и я пришлю PDF 🤝",
+        "Поможет тебе отключить внутренний диалог и провалиться в глубокий сон.\n\n"
+        "📦 *В наборе:*\n"
+        "• Аудиодорожка для засыпания (25 мин)\n"
+        "• Текстовая практика 'Дыхание 4-7-8'\n"
+        "• Чек-лист вечерней рутины\n\n"
+        "💰 *Цена:* 149 ₽\n\n"
+        "Нажми «Оплатить», чтобы открыть доступ ⬇️",
+        reply_markup=keyboard,
         parse_mode="Markdown"
     )
     await callback.answer()
 
-# КНОПКА "МЫСЛИ В ПОРЯДОК"
 @dp.callback_query(lambda c: c.data == "thoughts")
 async def thoughts(callback: types.CallbackQuery):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="💳 Оплатить 299 ₽", callback_data="pay_thoughts")]
+    ])
     await callback.message.answer(
         "🧠 *Мысли в порядок*\n\n"
-        "3 техники остановки тревоги + чек-лист 'Утро после'.\n\n"
-        "💰 Цена: 299 ₽\n\n"
-        "Оплата пока вручную — напиши мне, и я пришлю PDF 🤝",
+        "Гайд для тех, у кого в голове «каша», и сложно сосредоточиться.\n\n"
+        "📦 *В наборе:*\n"
+        "• Техника «Пустой лист»\n"
+        "• Аудио для фокуса (15 мин)\n"
+        "• Чек-лист продуктивного утра\n\n"
+        "💰 *Цена:* 299 ₽\n\n"
+        "Нажми «Оплатить», чтобы открыть доступ ⬇️",
+        reply_markup=keyboard,
         parse_mode="Markdown"
     )
     await callback.answer()
 
-# КНОПКА "VIP-ДОСТУП"
 @dp.callback_query(lambda c: c.data == "vip")
 async def vip(callback: types.CallbackQuery):
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="💳 Оплатить 799 ₽", callback_data="pay_vip")]
+    ])
     await callback.message.answer(
         "💎 *VIP-доступ*\n\n"
-        "Все гайды + ежемесячные обновления + закрытый чат.\n\n"
-        "💰 Цена: 799 ₽\n\n"
-        "Оплата пока вручную — напиши мне, и я пришлю PDF 🤝",
+        "Полный пакет всех гайдов + закрытый клуб.\n\n"
+        "📦 *В наборе:*\n"
+        "• Все гайды (Ночной прорыв, Мысли в порядок)\n"
+        "• Ежемесячные новые практики\n"
+        "• Закрытый чат с автором\n\n"
+        "💰 *Цена:* 799 ₽\n\n"
+        "Нажми «Оплатить», чтобы открыть доступ ⬇️",
+        reply_markup=keyboard,
         parse_mode="Markdown"
     )
     await callback.answer()
 
-# КНОПКА "КАК ЭТО РАБОТАЕТ"
 @dp.callback_query(lambda c: c.data == "help")
-async def help(callback: types.CallbackQuery):
+async def help_info(callback: types.CallbackQuery):
     await callback.message.answer(
         "📖 *Как это работает:*\n\n"
-        "1. Выбери гайд\n"
-        "2. Напиши мне\n"
-        "3. Я пришлю PDF и реквизиты\n"
-        "4. Ты оплачиваешь и получаешь гайд\n\n"
+        "1️⃣ Нажми на понравившийся гайд в меню.\n"
+        "2️⃣ Ознакомься с описанием.\n"
+        "3️⃣ Нажми «Оплатить».\n"
+        "4️⃣ После успешной оплаты товар придет тебе в этот чат.\n\n"
         "✅ Всё просто и честно!",
         parse_mode="Markdown"
     )
     await callback.answer()
 
-# КНОПКА "СВЯЗАТЬСЯ"
 @dp.callback_query(lambda c: c.data == "contact")
 async def contact(callback: types.CallbackQuery):
     await callback.message.answer(
-        "📞 *Связаться со мной:*\n\n"
-        "Напиши в личные сообщения:\n"
-        "@твой_никнейм (вставь сюда свой Telegram @)\n\n"
-        "Отвечаю в течение 10 минут!",
+        f"📞 *Связаться со мной:*\n\n"
+        f"Если у тебя возникли вопросы, пиши:\n"
+        f"{AUTHOR_CONTACT}\n\n"
+        f"Отвечаю в течение 10 минут!",
         parse_mode="Markdown"
     )
     await callback.answer()
 
-# ЗАПУСК
+# ==========================================
+# 5. ЛОГИКА ОПЛАТЫ (ЮKASSA)
+# ==========================================
+@dp.callback_query(lambda c: c.data.startswith("pay_"))
+async def process_payment(callback: types.CallbackQuery):
+    price = 0
+    title = ""
+    description = ""
+    payload = ""
+    
+    if callback.data == "pay_night":
+        price = 14900
+        title = "Ночной прорыв"
+        description = "Аудио и чек-лист для сна"
+        payload = "night_access"
+    elif callback.data == "pay_thoughts":
+        price = 29900
+        title = "Мысли в порядок"
+        description = "Техники и аудио для фокуса"
+        payload = "thoughts_access"
+    elif callback.data == "pay_vip":
+        price = 79900
+        title = "VIP-доступ"
+        description = "Все гайды и закрытый чат"
+        payload = "vip_access"
+
+    await bot.send_invoice(
+        chat_id=callback.message.chat.id,
+        title=title,
+        description=description,
+        payload=payload,
+        provider_token=PAYMENTS_TOKEN,
+        currency="RUB",
+        prices=[LabeledPrice(label=title, amount=price)]
+    )
+    await callback.answer()
+
+@dp.pre_checkout_query()
+async def process_pre_checkout(pre_checkout_query: PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+@dp.message(content_types=ContentType.SUCCESSFUL_PAYMENT)
+async def process_successful_payment(message: types.Message):
+    text = "✅ *Оплата прошла успешно! Спасибо за покупку!*\n\n"
+    text += "Твой гайд готовится к выдаче и появится здесь в ближайшее время. Как только файлы будут готовы, ты получишь их в этом чате автоматически.\n\n"
+    text += f"По всем вопросам пиши автору: {AUTHOR_CONTACT}"
+
+    await message.answer(text, parse_mode="Markdown")
+
+# ==========================================
+# 6. ЗАПУСК ПОЛЛИНГА
+# ==========================================
 async def main():
     await dp.start_polling(bot)
 
