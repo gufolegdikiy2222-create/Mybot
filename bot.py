@@ -1,11 +1,11 @@
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, LabeledPrice, PreCheckoutQuery, ContentType
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, LabeledPrice, PreCheckoutQuery
 from aiogram.filters import Command
 
 # ==========================================
-# 1. НАСТРОЙКИ (УЖЕ ВСТАВЛЕНЫ ЗА ТЕБЯ)
+# 1. НАСТРОЙКИ
 # ==========================================
 TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo" # Твой токен бота
 
@@ -13,7 +13,7 @@ TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo" # Твой токен �
 # Он будет выглядеть примерно так: 381764678:TEST:...
 PAYMENTS_TOKEN = "ВСТАВИТЬ_ТОКЕН_ЮKASSA_СЮДА"
 
-# Твой Telegram (уже вставлен)
+# Твой Telegram
 AUTHOR_CONTACT = "@erohon"
 
 # ==========================================
@@ -168,7 +168,9 @@ async def process_payment(callback: types.CallbackQuery):
 async def process_pre_checkout(pre_checkout_query: PreCheckoutQuery):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
-@dp.message(content_types=ContentType.SUCCESSFUL_PAYMENT)
+# ИСПРАВЛЕННАЯ СТРОКА (убрал content_types, используем F)
+from aiogram import F
+@dp.message(F.successful_payment)
 async def process_successful_payment(message: types.Message):
     text = "✅ *Оплата прошла успешно! Спасибо за покупку!*\n\n"
     text += "Твой гайд готовится к выдаче и появится здесь в ближайшее время. Как только файлы будут готовы, ты получишь их в этом чате автоматически.\n\n"
