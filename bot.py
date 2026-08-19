@@ -1,8 +1,28 @@
 import asyncio
 import logging
-from aiogram import Bot, Dispatcher, types
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+from aiogram import Bot, Dispatcher, types, F
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, LabeledPrice, PreCheckoutQuery
 from aiogram.filters import Command
+
+# ==========================================
+# 0. ОБМАНКА ДЛЯ RENDER (ЧТОБЫ НЕ ВЫКЛЮЧАЛ БОТА)
+# ==========================================
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b'Bot is running!')
+
+def run_fake_server():
+    server_address = ('', 10000) # Render обычно любит порт 10000
+    httpd = HTTPServer(server_address, Handler)
+    httpd.serve_forever()
+
+# Запускаем фейковый сервер в отдельном потоке
+threading.Thread(target=run_fake_server, daemon=True).start()
 
 # ==========================================
 # 1. НАСТРОЙКИ
@@ -168,8 +188,6 @@ async def process_payment(callback: types.CallbackQuery):
 async def process_pre_checkout(pre_checkout_query: PreCheckoutQuery):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
-# ИСПРАВЛЕННАЯ СТРОКА (убрал content_types, используем F)
-from aiogram import F
 @dp.message(F.successful_payment)
 async def process_successful_payment(message: types.Message):
     text = "✅ *Оплата прошла успешно! Спасибо за покупку!*\n\n"
