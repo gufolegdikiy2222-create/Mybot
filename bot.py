@@ -8,7 +8,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, LabeledPri
 from aiogram.filters import Command
 
 # ==========================================
-# 0. ОБМАНКА ДЛЯ RENDER (ЧТОБЫ НЕ ВЫКЛЮЧАЛ БОТА)
+# 0. ОБМАНКА ДЛЯ RENDER
 # ==========================================
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -24,21 +24,21 @@ def run_fake_server():
 threading.Thread(target=run_fake_server, daemon=True).start()
 
 # ==========================================
-# 1. НАСТРОЙКИ БОТА
+# 1. НАСТРОЙКИ
 # ==========================================
-TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo"      # Твой токен бота
-PAYMENTS_TOKEN = "624233:AAUlGsPd2QWYytXARxRXP2LxyjxrWZ6l5Rk" # Твой токен Crypto Pay
+TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo"
+PAYMENTS_TOKEN = "624233:AAUlGsPd2QWYytXARxRXP2LxyjxrWZ6l5Rk"
 AUTHOR_CONTACT = "@erohon"
 
 # ==========================================
-# 2. ЗАПУСК БОТА
+# 2. БОТ
 # ==========================================
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 # ==========================================
-# 3. СТАРТОВОЕ МЕНЮ
+# 3. МЕНЮ
 # ==========================================
 @dp.message(Command("start"))
 async def start(message: types.Message):
@@ -58,7 +58,7 @@ async def start(message: types.Message):
     )
 
 # ==========================================
-# 4. ОПИСАНИЯ ТОВАРОВ И КНОПКИ ОПЛАТЫ
+# 4. ТОВАРЫ
 # ==========================================
 @dp.callback_query(lambda c: c.data == "night")
 async def night(callback: types.CallbackQuery):
@@ -142,7 +142,7 @@ async def contact(callback: types.CallbackQuery):
     await callback.answer()
 
 # ==========================================
-# 5. ЛОГИКА ОПЛАТЫ CRYPTO PAY
+# 5. ОПЛАТА
 # ==========================================
 @dp.callback_query(lambda c: c.data.startswith("pay_"))
 async def process_payment(callback: types.CallbackQuery):
@@ -191,7 +191,7 @@ async def process_successful_payment(message: types.Message):
     await message.answer(text, parse_mode="Markdown")
 
 # ==========================================
-# 6. ЗАПУСК ПОЛЛИНГА
+# 6. ЗАПУСК
 # ==========================================
 async def main():
     await dp.start_polling(bot)
