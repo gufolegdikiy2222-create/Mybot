@@ -17,23 +17,17 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(b'Bot is running!')
 
 def run_fake_server():
-    server_address = ('', 10000) # Render обычно любит порт 10000
+    server_address = ('', 10000)
     httpd = HTTPServer(server_address, Handler)
     httpd.serve_forever()
 
-# Запускаем фейковый сервер в отдельном потоке
 threading.Thread(target=run_fake_server, daemon=True).start()
 
 # ==========================================
-# 1. НАСТРОЙКИ
+# 1. НАСТРОЙКИ БОТА
 # ==========================================
-TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo" # Твой токен бота
-
-# ВСТАВЬ СЮДА ТОКЕН ОТ ЮKASSA (КОТОРЫЙ ДАСТ BOTFATHER)
-# Он будет выглядеть примерно так: 381764678:TEST:...
-PAYMENTS_TOKEN = "ВСТАВИТЬ_ТОКЕН_ЮKASSA_СЮДА"
-
-# Твой Telegram
+TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo"      # Твой токен бота
+PAYMENTS_TOKEN = "624233:AAUlGsPd2QWYytXARxRXP2LxyjxrWZ6l5Rk" # Твой токен Crypto Pay
 AUTHOR_CONTACT = "@erohon"
 
 # ==========================================
@@ -44,7 +38,7 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 # ==========================================
-# 3. ГЛАВНОЕ МЕНЮ (СТАРТ)
+# 3. СТАРТОВОЕ МЕНЮ
 # ==========================================
 @dp.message(Command("start"))
 async def start(message: types.Message):
@@ -148,7 +142,7 @@ async def contact(callback: types.CallbackQuery):
     await callback.answer()
 
 # ==========================================
-# 5. ЛОГИКА ОПЛАТЫ (ЮKASSA)
+# 5. ЛОГИКА ОПЛАТЫ CRYPTO PAY
 # ==========================================
 @dp.callback_query(lambda c: c.data.startswith("pay_"))
 async def process_payment(callback: types.CallbackQuery):
@@ -158,17 +152,17 @@ async def process_payment(callback: types.CallbackQuery):
     payload = ""
     
     if callback.data == "pay_night":
-        price = 14900
+        price = 149
         title = "Ночной прорыв"
         description = "Аудио и чек-лист для сна"
         payload = "night_access"
     elif callback.data == "pay_thoughts":
-        price = 29900
+        price = 299
         title = "Мысли в порядок"
         description = "Техники и аудио для фокуса"
         payload = "thoughts_access"
     elif callback.data == "pay_vip":
-        price = 79900
+        price = 799
         title = "VIP-доступ"
         description = "Все гайды и закрытый чат"
         payload = "vip_access"
@@ -191,7 +185,7 @@ async def process_pre_checkout(pre_checkout_query: PreCheckoutQuery):
 @dp.message(F.successful_payment)
 async def process_successful_payment(message: types.Message):
     text = "✅ *Оплата прошла успешно! Спасибо за покупку!*\n\n"
-    text += "Твой гайд готовится к выдаче и появится здесь в ближайшее время. Как только файлы будут готовы, ты получишь их в этом чате автоматически.\n\n"
+    text += "Твой гайд готовится к выдаче и появится здесь в ближайшее время.\n\n"
     text += f"По всем вопросам пиши автору: {AUTHOR_CONTACT}"
 
     await message.answer(text, parse_mode="Markdown")
