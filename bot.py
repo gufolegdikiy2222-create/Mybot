@@ -2,13 +2,14 @@ import asyncio
 import logging
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import aiohttp
 
-from aiogram import Bot, Dispatcher, types, F
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, LabeledPrice, PreCheckoutQuery
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 
 # ==========================================
-# 0. ОБМАНКА ДЛЯ RENDER (ЧТОБЫ НЕ ВЫКЛЮЧАЛ БОТА)
+# 0. ОБМАНКА ДЛЯ RENDER
 # ==========================================
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -24,21 +25,23 @@ def run_fake_server():
 threading.Thread(target=run_fake_server, daemon=True).start()
 
 # ==========================================
-# 1. НАСТРОЙКИ БОТА
+# 1. НАСТРОЙКИ
 # ==========================================
-TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo"      # Твой токен бота
-PAYMENTS_TOKEN = "624233:AAUlGsPd2QWYytXARxRXP2LxyjxrWZ6l5Rk" # Твой токен Crypto Pay
+TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo"
 AUTHOR_CONTACT = "@erohon"
 
+# Токен Crypto Pay (Твой)
+API_TOKEN = "624233:AAUlGsPd2QWYytXARxRXP2LxyjxrWZ6l5Rk"
+
 # ==========================================
-# 2. ЗАПУСК БОТА
+# 2. БОТ
 # ==========================================
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 # ==========================================
-# 3. СТАРТОВОЕ МЕНЮ
+# 3. МЕНЮ
 # ==========================================
 @dp.message(Command("start"))
 async def start(message: types.Message):
@@ -58,12 +61,12 @@ async def start(message: types.Message):
     )
 
 # ==========================================
-# 4. ОПИСАНИЯ ТОВАРОВ И КНОПКИ ОПЛАТЫ
+# 4. ТОВАРЫ И ОПЛАТА (ЧЕРЕЗ ССЫЛКУ)
 # ==========================================
 @dp.callback_query(lambda c: c.data == "night")
 async def night(callback: types.CallbackQuery):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="💳 Оплатить 149 ₽", callback_data="pay_night")]
+        [InlineKeyboardButton(text="💳 Получить ссылку на оплату", callback_data="pay_night")]
     ])
     await callback.message.answer(
         "🌙 *Ночной прорыв*\n\n"
@@ -73,7 +76,7 @@ async def night(callback: types.CallbackQuery):
         "• Текстовая практика 'Дыхание 4-7-8'\n"
         "• Чек-лист вечерней рутины\n\n"
         "💰 *Цена:* 149 ₽\n\n"
-        "Нажми «Оплатить», чтобы открыть доступ ⬇️",
+        "Нажми кнопку ниже, чтобы получить ссылку для оплаты ⬇️",
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
@@ -82,7 +85,7 @@ async def night(callback: types.CallbackQuery):
 @dp.callback_query(lambda c: c.data == "thoughts")
 async def thoughts(callback: types.CallbackQuery):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="💳 Оплатить 299 ₽", callback_data="pay_thoughts")]
+        [InlineKeyboardButton(text="💳 Получить ссылку на оплату", callback_data="pay_thoughts")]
     ])
     await callback.message.answer(
         "🧠 *Мысли в порядок*\n\n"
@@ -92,7 +95,7 @@ async def thoughts(callback: types.CallbackQuery):
         "• Аудио для фокуса (15 мин)\n"
         "• Чек-лист продуктивного утра\n\n"
         "💰 *Цена:* 299 ₽\n\n"
-        "Нажми «Оплатить», чтобы открыть доступ ⬇️",
+        "Нажми кнопку ниже, чтобы получить ссылку для оплаты ⬇️",
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
@@ -101,7 +104,7 @@ async def thoughts(callback: types.CallbackQuery):
 @dp.callback_query(lambda c: c.data == "vip")
 async def vip(callback: types.CallbackQuery):
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="💳 Оплатить 799 ₽", callback_data="pay_vip")]
+        [InlineKeyboardButton(text="💳 Получить ссылку на оплату", callback_data="pay_vip")]
     ])
     await callback.message.answer(
         "💎 *VIP-доступ*\n\n"
@@ -111,7 +114,7 @@ async def vip(callback: types.CallbackQuery):
         "• Ежемесячные новые практики\n"
         "• Закрытый чат с автором\n\n"
         "💰 *Цена:* 799 ₽\n\n"
-        "Нажми «Оплатить», чтобы открыть доступ ⬇️",
+        "Нажми кнопку ниже, чтобы получить ссылку для оплаты ⬇️",
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
@@ -123,8 +126,9 @@ async def help_info(callback: types.CallbackQuery):
         "📖 *Как это работает:*\n\n"
         "1️⃣ Нажми на понравившийся гайд в меню.\n"
         "2️⃣ Ознакомься с описанием.\n"
-        "3️⃣ Нажми «Оплатить».\n"
-        "4️⃣ После успешной оплаты товар придет тебе в этот чат.\n\n"
+        "3️⃣ Нажми «Получить ссылку на оплату».\n"
+        "4️⃣ Перейди по ссылке и оплати.\n"
+        "5️⃣ После оплаты товар придет тебе в этот чат.\n\n"
         "✅ Всё просто и честно!",
         parse_mode="Markdown"
     )
@@ -142,56 +146,58 @@ async def contact(callback: types.CallbackQuery):
     await callback.answer()
 
 # ==========================================
-# 5. ЛОГИКА ОПЛАТЫ CRYPTO PAY (ИСПРАВЛЕНО НА USDT)
+# 5. ГЕНЕРАЦИЯ ССЫЛКИ НА ОПЛАТУ
 # ==========================================
-@dp.callback_query(lambda c: c.data.startswith("pay_"))
-async def process_payment(callback: types.CallbackQuery):
-    price = 0
-    title = ""
-    description = ""
-    payload = ""
-    
-    if callback.data == "pay_night":
-        price = 149
-        title = "Ночной прорыв"
-        description = "Аудио и чек-лист для сна"
-        payload = "night_access"
-    elif callback.data == "pay_thoughts":
-        price = 299
-        title = "Мысли в порядок"
-        description = "Техники и аудио для фокуса"
-        payload = "thoughts_access"
-    elif callback.data == "pay_vip":
-        price = 799
-        title = "VIP-доступ"
-        description = "Все гайды и закрытый чат"
-        payload = "vip_access"
+async def create_crypto_pay_invoice(amount, description):
+    url = "https://pay.crypt.bot/api/createInvoice"
+    headers = {"Crypto-Pay-API-Token": API_TOKEN}
+    data = {
+        "asset": "USDT",
+        "amount": amount,
+        "description": description,
+        "hidden_message": "Оплата гайда",
+        "callback_url": "https://mybot-7-0osj.onrender.com"
+    }
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, headers=headers, json=data) as resp:
+            if resp.status == 200:
+                result = await resp.json()
+                if result.get("ok"):
+                    return result["result"]["pay_url"]
+    return None
 
-    await bot.send_invoice(
-        chat_id=callback.message.chat.id,
-        title=title,
-        description=description,
-        payload=payload,
-        provider_token=PAYMENTS_TOKEN,
-        currency="USDT",  # ЗАМЕНЕНО НА USDT
-        prices=[LabeledPrice(label=title, amount=price)]
-    )
+@dp.callback_query(lambda c: c.data.startswith("pay_"))
+async def send_payment_link(callback: types.CallbackQuery):
+    await callback.message.answer("⏳ Генерирую ссылку на оплату...")
+    
+    amount = 0
+    desc = ""
+    if callback.data == "pay_night":
+        amount = 1.5  # Примерная цена в USDT (можно поменять)
+        desc = "Ночной прорыв"
+    elif callback.data == "pay_thoughts":
+        amount = 3.0
+        desc = "Мысли в порядок"
+    elif callback.data == "pay_vip":
+        amount = 8.0
+        desc = "VIP-доступ"
+        
+    link = await create_crypto_pay_invoice(amount, desc)
+    
+    if link:
+        await callback.message.answer(
+            f"✅ Ссылка на оплату готова!\n\n"
+            f"Товар: {desc}\n"
+            f"Сумма: {amount} USDT\n\n"
+            f"👉 [Перейти к оплате]({link})",
+            parse_mode="Markdown"
+        )
+    else:
+        await callback.message.answer("❌ Ошибка при создании ссылки. Проверь настройки Crypto Pay.")
     await callback.answer()
 
-@dp.pre_checkout_query()
-async def process_pre_checkout(pre_checkout_query: PreCheckoutQuery):
-    await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
-
-@dp.message(F.successful_payment)
-async def process_successful_payment(message: types.Message):
-    text = "✅ *Оплата прошла успешно! Спасибо за покупку!*\n\n"
-    text += "Твой гайд готовится к выдаче и появится здесь в ближайшее время.\n\n"
-    text += f"По всем вопросам пиши автору: {AUTHOR_CONTACT}"
-
-    await message.answer(text, parse_mode="Markdown")
-
 # ==========================================
-# 6. ЗАПУСК ПОЛЛИНГА
+# 6. ЗАПУСК
 # ==========================================
 async def main():
     await dp.start_polling(bot)
