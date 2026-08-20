@@ -1,15 +1,15 @@
 import asyncio
 import logging
 import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
 import aiohttp
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 
 # ==========================================
-# 0. ОБМАНКА ДЛЯ RENDER
+# 0. ОБМАНКА ДЛЯ RENDER (ЧТОБЫ НЕ ВЫКЛЮЧАЛ БОТА)
 # ==========================================
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -25,23 +25,23 @@ def run_fake_server():
 threading.Thread(target=run_fake_server, daemon=True).start()
 
 # ==========================================
-# 1. НАСТРОЙКИ
+# 1. НАСТРОЙКИ БОТА
 # ==========================================
 TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo"
 AUTHOR_CONTACT = "@erohon"
 
-# Токен Crypto Pay (Твой)
+# Твой токен от @CryptoPayBot (уже вставлен)
 API_TOKEN = "624233:AAUlGsPd2QWYytXARxRXP2LxyjxrWZ6l5Rk"
 
 # ==========================================
-# 2. БОТ
+# 2. ЗАПУСК БОТА
 # ==========================================
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 # ==========================================
-# 3. МЕНЮ
+# 3. СТАРТОВОЕ МЕНЮ
 # ==========================================
 @dp.message(Command("start"))
 async def start(message: types.Message):
@@ -61,7 +61,7 @@ async def start(message: types.Message):
     )
 
 # ==========================================
-# 4. ТОВАРЫ И ОПЛАТА (ЧЕРЕЗ ССЫЛКУ)
+# 4. ОПИСАНИЯ ТОВАРОВ И КНОПКА ССЫЛКИ
 # ==========================================
 @dp.callback_query(lambda c: c.data == "night")
 async def night(callback: types.CallbackQuery):
@@ -127,7 +127,7 @@ async def help_info(callback: types.CallbackQuery):
         "1️⃣ Нажми на понравившийся гайд в меню.\n"
         "2️⃣ Ознакомься с описанием.\n"
         "3️⃣ Нажми «Получить ссылку на оплату».\n"
-        "4️⃣ Перейди по ссылке и оплати.\n"
+        "4️⃣ Перейди по ссылке и оплати картой.\n"
         "5️⃣ После оплаты товар придет тебе в этот чат.\n\n"
         "✅ Всё просто и честно!",
         parse_mode="Markdown"
@@ -146,14 +146,14 @@ async def contact(callback: types.CallbackQuery):
     await callback.answer()
 
 # ==========================================
-# 5. ГЕНЕРАЦИЯ ССЫЛКИ НА ОПЛАТУ
+# 5. ГЕНЕРАЦИЯ ССЫЛКИ НА ОПЛАТУ В РУБЛЯХ
 # ==========================================
 async def create_crypto_pay_invoice(amount, description):
     url = "https://pay.crypt.bot/api/createInvoice"
     headers = {"Crypto-Pay-API-Token": API_TOKEN}
     data = {
-        "asset": "USDT",
-        "amount": amount,
+        "asset": "RUB",               # ЗАПРАШИВАЕМ РУБЛИ
+        "amount": amount,             # СУММА В РУБЛЯХ
         "description": description,
         "hidden_message": "Оплата гайда",
         "callback_url": "https://mybot-7-0osj.onrender.com"
@@ -173,13 +173,13 @@ async def send_payment_link(callback: types.CallbackQuery):
     amount = 0
     desc = ""
     if callback.data == "pay_night":
-        amount = 1.5  # Примерная цена в USDT (можно поменять)
+        amount = 149
         desc = "Ночной прорыв"
     elif callback.data == "pay_thoughts":
-        amount = 3.0
+        amount = 299
         desc = "Мысли в порядок"
     elif callback.data == "pay_vip":
-        amount = 8.0
+        amount = 799
         desc = "VIP-доступ"
         
     link = await create_crypto_pay_invoice(amount, desc)
@@ -188,12 +188,12 @@ async def send_payment_link(callback: types.CallbackQuery):
         await callback.message.answer(
             f"✅ Ссылка на оплату готова!\n\n"
             f"Товар: {desc}\n"
-            f"Сумма: {amount} USDT\n\n"
-            f"👉 [Перейти к оплате]({link})",
+            f"Сумма: {amount} ₽\n\n"
+            f"👉 [Перейти к оплате картой]({link})",
             parse_mode="Markdown"
         )
     else:
-        await callback.message.answer("❌ Ошибка при создании ссылки. Проверь настройки Crypto Pay.")
+        await callback.message.answer("❌ Ошибка при создании ссылки. Проверь, есть ли описание у магазина в Crypto Pay.")
     await callback.answer()
 
 # ==========================================
