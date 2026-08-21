@@ -8,7 +8,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 
 # ==========================================
-# 0. ОБМАНКА ДЛЯ RENDER
+# 0. ОБМАНКА ДЛЯ RENDER (ЧТОБЫ НЕ ВЫКЛЮЧАЛ)
 # ==========================================
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -29,6 +29,9 @@ threading.Thread(target=run_fake_server, daemon=True).start()
 TOKEN = "8341288415:AAGJRA1gPGobFNkaF9kfkmfPx7DxLH0BdPo"
 AUTHOR_CONTACT = "@erohon"
 
+# Твой ID кошелька ЮMoney (уже вставлен с твоего скриншота)
+YOOMONEY_ID = "4100119606524632" 
+
 # ==========================================
 # 2. ЗАПУСК БОТА
 # ==========================================
@@ -37,15 +40,7 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 # ==========================================
-# 3. ОБХОД ПРОВЕРКИ ДОМЕНА ДЛЯ AURAPAY
-# ==========================================
-@dp.message(Command("check"))
-async def check_domain(message: types.Message):
-    # Если AuraPay пришлёт запрос /check, бот ответит этим мета-тегом
-    await message.answer('<meta name="aurapay" content="6a869b95d8db0">')
-
-# ==========================================
-# 4. СТАРТОВОЕ МЕНЮ
+# 3. СТАРТОВОЕ МЕНЮ
 # ==========================================
 @dp.message(Command("start"))
 async def start(message: types.Message):
@@ -65,12 +60,17 @@ async def start(message: types.Message):
     )
 
 # ==========================================
-# 5. ТОВАРЫ И ОПЛАТА
+# 4. ТОВАРЫ И ССЫЛКИ НА ОПЛАТУ
 # ==========================================
+def get_yoomoney_link(amount, product_name):
+    # Генерируем ссылку на оплату (СБП, Сбер, Т-Банк, карта)
+    return f"https://yoomoney.ru/quickpay/confirm?receiver={YOOMONEY_ID}&quickpay-form=shop&targets={product_name}&sum={amount}"
+
 @dp.callback_query(lambda c: c.data == "night")
 async def night(callback: types.CallbackQuery):
+    pay_link = get_yoomoney_link(149, "Ночной прорыв")
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="💳 Перейти к оплате", url="https://aurapay.tech/pay/your_payment_link")]
+        [InlineKeyboardButton(text="💳 Оплатить 149 ₽", url=pay_link)]
     ])
     await callback.message.answer(
         "🌙 *Ночной прорыв*\n\n"
@@ -80,7 +80,7 @@ async def night(callback: types.CallbackQuery):
         "• Текстовая практика 'Дыхание 4-7-8'\n"
         "• Чек-лист вечерней рутины\n\n"
         "💰 *Цена:* 149 ₽\n\n"
-        "👇 Нажми кнопку ниже, чтобы перейти к оплате!",
+        "Нажми кнопку ниже, чтобы перейти к оплате ⬇️",
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
@@ -88,8 +88,9 @@ async def night(callback: types.CallbackQuery):
 
 @dp.callback_query(lambda c: c.data == "thoughts")
 async def thoughts(callback: types.CallbackQuery):
+    pay_link = get_yoomoney_link(299, "Мысли в порядок")
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="💳 Перейти к оплате", url="https://aurapay.tech/pay/your_payment_link")]
+        [InlineKeyboardButton(text="💳 Оплатить 299 ₽", url=pay_link)]
     ])
     await callback.message.answer(
         "🧠 *Мысли в порядок*\n\n"
@@ -99,7 +100,7 @@ async def thoughts(callback: types.CallbackQuery):
         "• Аудио для фокуса (15 мин)\n"
         "• Чек-лист продуктивного утра\n\n"
         "💰 *Цена:* 299 ₽\n\n"
-        "👇 Нажми кнопку ниже, чтобы перейти к оплате!",
+        "Нажми кнопку ниже, чтобы перейти к оплате ⬇️",
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
@@ -107,8 +108,9 @@ async def thoughts(callback: types.CallbackQuery):
 
 @dp.callback_query(lambda c: c.data == "vip")
 async def vip(callback: types.CallbackQuery):
+    pay_link = get_yoomoney_link(799, "VIP-доступ")
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="💳 Перейти к оплате", url="https://aurapay.tech/pay/your_payment_link")]
+        [InlineKeyboardButton(text="💳 Оплатить 799 ₽", url=pay_link)]
     ])
     await callback.message.answer(
         "💎 *VIP-доступ*\n\n"
@@ -118,7 +120,7 @@ async def vip(callback: types.CallbackQuery):
         "• Ежемесячные новые практики\n"
         "• Закрытый чат с автором\n\n"
         "💰 *Цена:* 799 ₽\n\n"
-        "👇 Нажми кнопку ниже, чтобы перейти к оплате!",
+        "Нажми кнопку ниже, чтобы перейти к оплате ⬇️",
         reply_markup=keyboard,
         parse_mode="Markdown"
     )
@@ -130,9 +132,9 @@ async def help_info(callback: types.CallbackQuery):
         "📖 *Как это работает:*\n\n"
         "1️⃣ Нажми на понравившийся гайд в меню.\n"
         "2️⃣ Ознакомься с описанием.\n"
-        "3️⃣ Нажми «Перейти к оплате».\n"
-        "4️⃣ Оплати.\n"
-        "5️⃣ Товар придет автоматически после оплаты.\n\n"
+        "3️⃣ Нажми «Оплатить».\n"
+        "4️⃣ Оплати через СБП или карту.\n"
+        "5️⃣ После оплаты напиши автору, чтобы получить гайд.\n\n"
         "✅ Всё просто и честно!",
         parse_mode="Markdown"
     )
@@ -142,7 +144,7 @@ async def help_info(callback: types.CallbackQuery):
 async def contact(callback: types.CallbackQuery):
     await callback.message.answer(
         f"📞 *Связаться со мной:*\n\n"
-        f"Если у тебя возникли вопросы, пиши:\n"
+        f"Если у тебя возникли вопросы или после оплаты — пиши:\n"
         f"{AUTHOR_CONTACT}\n\n"
         f"Отвечаю в течение 10 минут!",
         parse_mode="Markdown"
@@ -150,7 +152,7 @@ async def contact(callback: types.CallbackQuery):
     await callback.answer()
 
 # ==========================================
-# 6. ЗАПУСК
+# 5. ЗАПУСК БОТА
 # ==========================================
 async def main():
     await dp.start_polling(bot)
